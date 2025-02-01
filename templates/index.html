@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Stream</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #video-feed {
+            width: 60%;
+            margin-bottom: 20px;
+        }
+        #photo-preview {
+            width: 30%;
+            margin-top: 20px;
+        }
+        #preview, #ai-preview {
+            width: 100%;
+            max-height: 300px;
+            margin-top: 10px;
+        }
+        #retake, #ai-process {
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #photo-preview, #ai-preview {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Live Video Feed</h1>
+    <div>
+        <img id="video-feed" src="http://172.20.10.7:5000/video_feed" alt="Live Feed">
+        <div id="photo-preview">
+            <img src="" id="preview" alt="Preview">
+            <button id="retake" style="display:none;">Retake Photo</button>
+        </div>
+    </div>
+    <button id="take-photo">Take Photo</button>
+
+    <div id="ai-preview">
+        <img src="" id="ai-preview-image" alt="AI Processed Image">
+        <button id="ai-process" style="display:none;">AI Process</button>
+    </div>
+
+    <script>
+        document.getElementById('take-photo').addEventListener('click', function() {
+            fetch('/take_photo', {
+                method: 'POST',
+            }).then(response => response.json())
+              .then(data => {
+                  document.getElementById('preview').src = data.photo_url;
+                  document.getElementById('retake').style.display = 'inline';
+                  document.getElementById('ai-process').style.display = 'inline';
+              });
+        });
+
+        document.getElementById('retake').addEventListener('click', function() {
+            location.reload();
+        });
+
+        document.getElementById('ai-process').addEventListener('click', function() {
+            fetch('/process_ai', {
+                method: 'POST',
+            }).then(response => response.json())
+              .then(data => {
+                  document.getElementById('ai-preview-image').src = data.mask_url;
+              });
+        });
+    </script>
+</body>
+</html>

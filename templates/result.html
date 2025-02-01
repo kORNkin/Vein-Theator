@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prediction Result</title>
+</head>
+<body>
+    <h1>AI Prediction Result</h1>
+    
+    <h3>Raw Image</h3>
+    <img src="{{ url_for('uploaded_file', filename=raw_image.split('/')[-1]) }}" alt="Raw Image" width="400"><br><br>
+    
+    <h3>AI Prediction</h3>
+    <img src="{{ url_for('uploaded_file', filename=predicted_image.split('/')[-1]) }}" alt="Predicted Image" width="400"><br><br>
+    
+    <a href="/">Upload another image</a>
+</body>
+</html>
