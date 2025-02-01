@@ -1,0 +1,6 @@
+tensorflow-cpu 
+flask 
+pillow 
+requests 
+matplotlib
+opencv-python
