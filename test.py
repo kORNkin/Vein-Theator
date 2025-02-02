@@ -112,55 +112,80 @@ def infer(model, image_tensor):
     return predictions
 
 def plot_visualization(real_data, predicted_data):
-  colors = {"background":[59, 82, 139],
-            "arm":[3, 31, 254],
-            "veins":[253, 231, 37]}
+    try:
+        colors = {
+            "background": [59, 82, 139],
+            "arm": [3, 31, 254],
+            "veins": [253, 231, 37]
+        }
 
-  visualization = []
-  image = real_data["image"].numpy().astype(np.uint8)
-  image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-  for data in [real_data,
-               predicted_data
-               ]:
-    mask = data["mask"].numpy().astype(np.uint8)
-    mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)
+        visualization = []
+        image = real_data["image"].numpy().astype(np.uint8)
 
-    mask[np.where((mask==[0,0,0]).all(axis=2))] = colors["background"]
-    mask[np.where((mask==[1,1,1]).all(axis=2))] = colors["arm"]
-    mask[np.where((mask==[2,2,2]).all(axis=2))] = colors["veins"]
+        # Convert grayscale image to RGB
+        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
-    if data["type"] == "predicted":
-      mask = cv2.resize(mask, (1080,1080), interpolation = cv2.INTER_AREA)
-      final_mask = np.full(shape = (1080,1920,3), fill_value=colors["background"])
-      final_mask[:,540:1620,:] = mask
-      mask = final_mask.astype(np.uint8)
+        # Resize real image to 1080x1920
+        image_resized = cv2.resize(image, (1920, 1080), interpolation=cv2.INTER_AREA)
 
-    new_image = cv2.addWeighted(image, 0.8, mask, 0.5, 0.0)
-    angle = data["angle"]
-    cv2.circle(new_image, (data["x"], data["y"]), radius=10, color=(0,255,0), thickness=-1)
-    cv2.putText(new_image, f"{angle:.2f}", (data["x"]+10,data["y"]+5), cv2.FONT_HERSHEY_SIMPLEX , 2, (0,255,0), thickness = 5)
-    visualization.append(new_image)
+        for data in [real_data, predicted_data]:
+            mask = data["mask"].numpy().astype(np.uint8)
 
-    # Preprocessing
-    new_image2 = cv2.addWeighted(image, 0.8, mask, 0.5, 0.0)
-    size = 100
-    start_point = (data["x"]-int(size/2), data["y"]-int(size/2))
-    end_point = (data["x"]+int(size/2), data["y"]+int(size/2))
-    new_image2 = cv2.rectangle(new_image2, start_point, end_point, (0,255,0), 5)
-    visualization.append(new_image2)
-    cv2.imshow("Inference", cv2.cvtColor(new_image2, cv2.COLOR_BGR2RGB))
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+            # Ensure the mask is 3-channel (convert grayscale to RGB)
+            mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)
 
+            # Assign color to mask classes
+            mask[np.where((mask == [0, 0, 0]).all(axis=2))] = colors["background"]
+            mask[np.where((mask == [1, 1, 1]).all(axis=2))] = colors["arm"]
+            mask[np.where((mask == [2, 2, 2]).all(axis=2))] = colors["veins"]
 
-  f, ax = plt.subplots(2, 2, sharey=True, sharex=True, figsize=(12, 7))
+            if data["type"] == "predicted":
+                # Resize mask to 1080x1080
+                mask_resized = cv2.resize(mask, (1080, 1080), interpolation=cv2.INTER_AREA)
 
-  ax[0][0].set_title("Real")
-  ax[0][0].imshow(visualization[0])
-  ax[0][1].set_title("Predicted")
-  ax[0][1].imshow(visualization[2])
-  ax[1][0].imshow(visualization[1])
-  ax[1][1].imshow(visualization[3])
+                # Create blank mask (1080x1920) and place the 1080x1080 mask in the center
+                mask_final = np.full((1080, 1920, 3), colors["background"], dtype=np.uint8)
+                mask_final[:, 540:1620, :] = mask_resized  # Center the mask
+            else:
+                mask_final = cv2.resize(mask, (1920, 1080), interpolation=cv2.INTER_AREA)
+
+            # Ensure both images are the same size
+            if image_resized.shape != mask_final.shape:
+                print("Size mismatch! Resizing mask to match image size.")
+                mask_final = cv2.resize(mask_final, (1920, 1080), interpolation=cv2.INTER_AREA)
+
+            # Blend image with mask
+            new_image = cv2.addWeighted(image_resized, 0.8, mask_final, 0.5, 0.0)
+
+            # Draw the predicted point and angle on the image
+            angle = data["angle"]
+            cv2.circle(new_image, (data["x"], data["y"]), radius=10, color=(0, 255, 0), thickness=-1)
+            cv2.putText(new_image, f"{angle:.2f}", (data["x"] + 10, data["y"] + 5),
+                        cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), thickness=5)
+            visualization.append(new_image)
+
+            # Create second visualization with a bounding box
+            new_image2 = new_image.copy()
+            size = 100
+            start_point = (data["x"] - int(size / 2), data["y"] - int(size / 2))
+            end_point = (data["x"] + int(size / 2), data["y"] + int(size / 2))
+            cv2.rectangle(new_image2, start_point, end_point, (0, 255, 0), 5)
+            visualization.append(new_image2)
+
+        # Save the processed images
+        output_path1 = "static/predicted_image1.jpg"
+        output_path2 = "static/predicted_image2.jpg"
+        output_path3 = "static/predicted_image3.jpg"
+
+        cv2.imwrite(output_path1, visualization[0])  # First visualization
+        cv2.imwrite(output_path2, visualization[1])  # Second visualization (Bounding box)
+        cv2.imwrite(output_path3, visualization[2])  # Third visualization (Optional)
+
+        return [output_path1, output_path2, output_path3]
+    
+    except Exception as e:
+        print(f'Error during AI processing: {e}')
+        return None
 
 # ฟังก์ชันพยากรณ์โดยใช้ภาพจากกล้อง
 def make_prediction(model):
@@ -190,14 +215,15 @@ def make_prediction(model):
 @app.route('/process_ai', methods=['POST'])
 def process_ai():
     try:
-        image_path = 'test.jpg'
+        image_path = 'static/photo.jpg' # Modify this to capture image or use an existing image
         if image_path is None:
             return
         
         image_tensor, base_image_tensor = read_image(image_path)
+        print("1")
 
         mask_tensor = tf.zeros_like(base_image_tensor)  # สร้าง mask เปล่า
-
+        print("2")
         real_data = {
             "image": base_image_tensor,
             "mask": mask_tensor,
@@ -206,12 +232,15 @@ def process_ai():
             "angle": 0,
             "type": "real"
         }
-
+        print("3")
         image_tensor = normalize(image_tensor)
+        print("4")
         predicted_data = infer(model=unet, image_tensor=image_tensor)
-        plot_visualization(real_data, predicted_data)
+        print("5")
+        predicted_image_path = plot_visualization(real_data, predicted_data)
+        print("6")
 
-        return jsonify({'mask_url': f'/{image_path}'})
+        return jsonify({'mask_url': f'/{predicted_image_path[2]}'}), 200
     except Exception as e:
         return jsonify({'error': f'Error during AI processing: {e}'}), 500
 

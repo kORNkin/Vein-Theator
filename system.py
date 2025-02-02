@@ -9,7 +9,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 # โหลดโมเดล UNet
-SAVED_MODEL = "C:/Users/noppa/Desktop/I-NewGen/System/Project/try/unet/best_model"
+SAVED_MODEL = "try/unet/best_model"
 unet = tf.keras.models.load_model(SAVED_MODEL)
 
 # ตั้งค่าขนาดภาพ
@@ -31,7 +31,7 @@ def capture_image():
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # บันทึกไฟล์เป็นภาพชั่วคราว
-    image_path = "C:/Users/noppa/Desktop/I-NewGen/System/Project/image_path/captured_image.jpg"
+    image_path = "test.jpg"
     cv2.imwrite(image_path, frame_gray)
     
     return image_path
@@ -106,3 +106,5 @@ def make_prediction(model):
     plot_visualization(real_data, predicted_data)
 
     print("🔍 ใช้ภาพที่ถ่ายจากกล้อง:", image_path)
+
+make_prediction(unet)

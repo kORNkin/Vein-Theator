@@ -3,65 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Stream</title>
+    <title>Vein Theator</title>
     <style>
+        /* General Styling */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             text-align: center;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
         }
-        #video-feed {
-            width: 60%;
+        
+        h1 {
+            color: #333;
             margin-bottom: 20px;
         }
-        #photo-preview {
-            width: 30%;
+
+        /* Video and Preview Sections */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #video-feed {
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .preview-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
             margin-top: 20px;
         }
-        #preview, #ai-preview {
+
+        .preview-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            width: 45%;
+            max-width: 400px;
+        }
+
+        img {
             width: 100%;
             max-height: 300px;
-            margin-top: 10px;
+            border-radius: 8px;
+            object-fit: cover;
         }
-        #retake, #ai-process {
-            margin-top: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            margin: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        #photo-preview, #ai-preview {
+
+        /* Button Styles */
+        .button-container {
             margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .preview-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .preview-box {
+                width: 90%;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Live Video Feed</h1>
-    <div>
-        <img id="video-feed" src="http://172.20.10.7:5000/video_feed" alt="Live Feed">
-        <div id="photo-preview">
-            <img src="" id="preview" alt="Preview">
-            <button id="retake" style="display:none;">Retake Photo</button>
-        </div>
-    </div>
-    <button id="take-photo">Take Photo</button>
+    <h1>Vein Theator</h1>
 
-    <div id="ai-preview">
-        <img src="" id="ai-preview-image" alt="AI Processed Image">
-        <button id="ai-process" style="display:none;">AI Process</button>
+    <div class="container">
+        <!-- Live Video Feed -->
+        <img id="video-feed" src="http://172.20.10.7:5000/video_feed" alt="Live Video Feed">
+        
+        <!-- Button Section -->
+        <div class="button-container">
+            <button id="take-photo">📷 Take Photo</button>
+            <button id="retake" style="display:none;">🔄 Retake</button>
+        </div>
+
+        <!-- Image Previews -->
+        <div class="preview-container">
+            <!-- Captured Photo -->
+            <div class="preview-box">
+                <h3>Captured Photo</h3>
+                <img src="" id="preview" alt="Captured Preview">
+            </div>
+
+            <!-- AI Processed Image -->
+            <div class="preview-box">
+                <h3>AI Processed Image</h3>
+                <img src="" id="ai-preview-image" alt="AI Result">
+                <button id="ai-process" style="display:none;">🤖 Process with AI</button>
+            </div>
+        </div>
     </div>
 
     <script>
         document.getElementById('take-photo').addEventListener('click', function() {
-            fetch('/take_photo', {
-                method: 'POST',
-            }).then(response => response.json())
-              .then(data => {
-                  document.getElementById('preview').src = data.photo_url;
-                  document.getElementById('retake').style.display = 'inline';
-                  document.getElementById('ai-process').style.display = 'inline';
-              });
+            fetch('/take_photo', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('preview').src = data.photo_url;
+                document.getElementById('retake').style.display = 'inline';
+                document.getElementById('ai-process').style.display = 'inline';
+            });
         });
 
         document.getElementById('retake').addEventListener('click', function() {
@@ -69,12 +147,11 @@
         });
 
         document.getElementById('ai-process').addEventListener('click', function() {
-            fetch('/process_ai', {
-                method: 'POST',
-            }).then(response => response.json())
-              .then(data => {
-                  document.getElementById('ai-preview-image').src = data.mask_url;
-              });
+            fetch('/process_ai', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('ai-preview-image').src = data.mask_url;
+            });
         });
     </script>
 </body>
